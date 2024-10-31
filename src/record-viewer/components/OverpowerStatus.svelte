@@ -4,8 +4,34 @@
 
     export let records: ParsedRecord[]
 
-    $: totalOverpower = records.reduce((pre, record) => pre + record.op, 0)
-    $: maxOverpower = records.reduce((pre, record) => pre + record.opMax, 0)
+    function calculateTotalOp(records: ParsedRecord[]) {
+        const getOpPerSong = records.reduce((acc, curr) => {
+            // Check if the stage already has a recorded score or if the current score is higher
+            if (!acc[curr.title] || curr.op > acc[curr.title]) {
+                acc[curr.title] = curr.op;
+            }
+            return acc;
+        }, {} as Record<string, number>);
+
+        // Sum the highest scores across all stages
+        return Object.values(getOpPerSong).reduce((sum, score) => sum + score, 0);
+    }
+
+    function calculateMaxOp(records: ParsedRecord[]) {
+        const getMaxOpPerSong = records.reduce((acc, curr) => {
+            // Check if the stage already has a recorded score or if the current score is higher
+            if (!acc[curr.title] || curr.opMax > acc[curr.title]) {
+                acc[curr.title] = curr.opMax;
+            }
+            return acc;
+        }, {} as Record<string, number>);
+
+        // Sum the highest scores across all stages
+        return Object.values(getMaxOpPerSong).reduce((sum, score) => sum + score, 0);
+    }
+
+    $: totalOverpower = calculateTotalOp(records)
+    $: maxOverpower = calculateMaxOp(records)
     $: progress = (totalOverpower / maxOverpower) * 100
 </script>
 
