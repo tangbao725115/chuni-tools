@@ -1,7 +1,9 @@
 import { chuniNet } from "./const"
 import { parseNumber } from "./number"
 import { genreAll, Difficulty, difficulties } from "./song"
-import { getCookie } from "./web"
+import { getCookie, getCurrentFriend } from "./web"
+
+const songMap = new Map<string, string>(Object.entries(require(`@/common/locale/inverse_idxmap.json`)))
 
 async function fetchChuniPage(url: string, fd?: FormData) {
     const res = await fetch(chuniNet + url, {
@@ -43,6 +45,32 @@ export async function fetchBestRecord(diff: Difficulty = Difficulty.master): Pro
             clear: icons?.querySelector(`img[src*="alljustice"]`) ? "AJ" :
                 icons?.querySelector(`img[src*="fullcombo"]`) ? "FC" : "",
             idx: (<HTMLInputElement>f.querySelector(`input[name="idx"]`)).value
+        } as BestRecord
+    }).filter((s) => s.title && s.score /* && s.score > 0 */)
+    return recordList
+}
+
+export async function fetchFriendBestRecord(diff: Difficulty = Difficulty.master): Promise<BestRecord[]> {
+    const fd = new FormData()
+    fd.append("genre", genreAll)
+    fd.append("token", getCookie("_t"))
+    fd.append("friend", getCurrentFriend())
+    fd.append("radio_diff", difficulties.indexOf(diff).toString())
+
+    const dom = await fetchChuniPage("/mobile/friend/genreVs/sendBattleStart", fd)
+    const recordList = Array.from(
+        dom.querySelectorAll(".box01.w420")[0].querySelectorAll(".music_box")
+    ).map((f) => {
+        const icons = f.querySelector(".vs_list_friendbatch")
+        const scoreText = icons!.parentElement!.querySelector(".play_musicdata_highscore")!.innerHTML
+        const song_name = f.querySelector(".block_underline")?.children[0].innerHTML
+        return {
+            title: song_name,
+            score: scoreText ? parseNumber(scoreText) : -1,
+            difficulty: diff,
+            clear: icons?.querySelector(`img[src*="alljustice"]`) ? "AJ" :
+                icons?.querySelector(`img[src*="fullcombo"]`) ? "FC" : "",
+            idx: songMap.get(song_name!)
         } as BestRecord
     }).filter((s) => s.title && s.score /* && s.score > 0 */)
     return recordList
@@ -105,6 +133,34 @@ export async function fetchPlayerStats(): Promise<PlayerStats> {
         rating,
         ratingMax: dom.querySelector(".player_rating_max")!.innerHTML,
         playCount: dom.querySelector(".user_data_play_count .user_data_text")!.innerHTML,
+        lastPlayed: Date.parse(dom.querySelector(".player_lastplaydate_text")!.innerHTML)
+    }
+}
+
+export async function fetchFriendPlayerStats(): Promise<PlayerStats> {
+    const fd = new FormData()
+    fd.append("idx", getCurrentFriend())
+    fd.append("token", getCookie("_t"))
+    const dom = await fetchChuniPage("/mobile/friend/sendFriendDetail", fd)
+    const honorBg = <HTMLDivElement>dom.querySelector(".player_honor_short")
+    const honorColor = /honor_bg_.*(?=\.png)/.exec(honorBg.style.backgroundImage)
+    const rating = (<Array<HTMLImageElement>>Array.from(
+        dom.querySelectorAll(".player_rating_num_block img")
+    )).map((i) => {
+        if (/rating_.*_comma.png/.test(i.src)) return "."
+        const imgSrc = /rating_.*_[0-9]*(?=\.png)/.exec(i.src)
+        return imgSrc![0].slice(-1)
+    }).join("")
+
+    return {
+        name: dom.querySelector(".player_name_in")!.innerHTML,
+        honor: {
+            text: dom.querySelector(".player_honor_text_view span")!.innerHTML,
+            color: honorColor ? honorColor[0].slice(9) : "normal"
+        },
+        rating,
+        ratingMax: dom.querySelector(".player_rating_max")!.innerHTML,
+        playCount: "--",
         lastPlayed: Date.parse(dom.querySelector(".player_lastplaydate_text")!.innerHTML)
     }
 }

@@ -38,6 +38,8 @@ import { chuniNet, chuniNetBase } from "@/common/const"
         appendScript("idxmap-generate")
     } else if (path.indexOf("/mobile/record/musicGenre") != -1) {
         appendScript("export-csv")
+    } else if (path.indexOf("/mobile/friend/genreVs/battleStart") != -1) {
+        appendScript("fetch-friend")
     } else { // /mobile/home
         appendScript("fetch-all")
     }

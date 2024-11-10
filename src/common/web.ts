@@ -33,3 +33,10 @@ export function getCookie(key: string) {
     if (cookieEntry) return cookieEntry[1] // value
     return ""
 }
+
+export function getCurrentFriend() {
+    const friends = document.getElementsByName("friend")[0]
+    const curr_friend_name: string = (friends as HTMLInputElement).value!
+    if (curr_friend_name) return curr_friend_name // value
+    return ""
+}

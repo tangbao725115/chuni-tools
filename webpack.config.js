@@ -7,6 +7,7 @@ const { DefinePlugin } = require("webpack")
 const scriptEntryPoints = {
     "chuni-tools": "@/scripts/chuni-tools.ts",
     "fetch-all": "@/scripts/fetch-all.ts",
+    "fetch-friend": "@/scripts/fetch-friend.ts",
     "idxmap-generate": "@/scripts/idxmap-generate.ts",
     "export-csv": "@/scripts/export-csv.ts",
 }
@@ -25,6 +26,7 @@ const outputPath = prod ? "./docs" : "./build"
 module.exports = /** @type { import('webpack').Configuration } */ ({
     entry: {
         "record-viewer": "@/record-viewer/main.ts",
+        "friend-record-viewer": "@/friend-record-viewer/main.ts",
         "record-viewer/manual": "@/record-viewer-manual/main.ts",
         "index-page": "@/index-page/main.ts",
         ...scriptEntryPoints,
